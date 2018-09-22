@@ -35,6 +35,8 @@
 #include "adcutils.h"
 #include "stringutils.h"
 #include "mqttutils.h"
+#include "bleutils.h"
+#include "ble_capture.h"
 
 #include "esp_bt.h"
 #include "esp_gap_ble_api.h"
@@ -49,7 +51,7 @@
 #define SOFTAP_SSID                 "ESP32AP"
 #define SOFTAP_PASSWORD             "abcdefpassword"
 
-#define WEB_SERVER                  "104.154.22.163"
+#define WEB_SERVER                  "iot.eclipse.org"
 #define WEB_PORT                    1883                                // should be an integer and not a string
 
 #define SENSOR_ID                   "c6f900db58e9"
@@ -65,8 +67,11 @@
 
 extern EventGroupHandle_t esp32_event_group;
 extern const int WIFI_CONNECTED_BIT;
+extern const int MQTT_CONNECTED_BIT;
 extern const int MQTT_PUBLISHED_BIT;
-extern const int MQTT_INITIATE_PUBLISH_BIT;
+extern const int BLE_SCANNED_BIT;
+
+extern char sensor_data[1024];
 
 esp_err_t wifi_event_handler(void *ctx, system_event_t *event);
 

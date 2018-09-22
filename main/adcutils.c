@@ -33,7 +33,7 @@ void GetAdcValue_Task()
         {
             ESP_LOGI("GetAdcValue_Task", "%dmV changed to %dmV\n",previousVoltage, gb_voltage);
             previousVoltage = gb_voltage;
-            xEventGroupSetBits(esp32_event_group, MQTT_INITIATE_PUBLISH_BIT);
+            //xEventGroupSetBits(esp32_event_group, MQTT_INITIATE_PUBLISH_BIT);
         }
         //printf("prev:%dmV %dmV %d%%\n",previousVoltage, voltage, percentageChange);
         vTaskDelay(300/portTICK_RATE_MS);

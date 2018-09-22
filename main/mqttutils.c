@@ -7,21 +7,28 @@ mqtt_client * gb_mqttClient = NULL;
 void connected_cb(void *self, void *params)
 {
     mqtt_client *client = (mqtt_client *)self;
-    
-    //const char topic_subscribe[] = "sensors/"SENSOR_ID"/configuration";
-    //mqtt_subscribe(client, topic_subscribe, 1);
-    
     const char topic_publish[] = "sensors/"SENSOR_ID"/status";
     //const char topic_subscribe[] = "sensors/"SENSOR_ID"/configuration";
     const char body[] = "{\"online\":true}";
     ESP_LOGI("connected_cb", "topic_publish: %s   body: %s", topic_publish, body);
     mqtt_publish(client, topic_publish, body, sizeof(body)-1, 1, 0);                            // sizeof()-1 to compensate for the trailing '\0' in the string
-    
+	
+	//Set bit 
+	xEventGroupSetBits(esp32_event_group, MQTT_CONNECTED_BIT);
+	ESP_LOGI(MQTT_TAG, "[APP] MQTT_CONNECTED_BIT: %d", 1);
 }
 
 void disconnected_cb(void *self, void *params)
 {
-
+	mqtt_client *client = (mqtt_client *)self;
+    const char topic_publish[] = "sensors/"SENSOR_ID"/status";
+    const char body[] = "{\"online\": false}";
+    mqtt_publish(client, topic_publish, body, sizeof(body)-1, 1, 0);                            // sizeof()-1 to compensate for the trailing '\0' in the string
+	ESP_LOGI("disconnected_cb", "topic_publish: %s   body: %s", topic_publish, body);
+	
+	//Clear bit 
+	xEventGroupClearBits(esp32_event_group, MQTT_CONNECTED_BIT);
+	ESP_LOGI(MQTT_TAG, "[APP] MQTT_CONNECTED_BIT: %d", 0);
 }
 
 void reconnect_cb(void *self, void *params)
@@ -31,18 +38,23 @@ void reconnect_cb(void *self, void *params)
 
 void subscribe_cb(void *self, void *params)
 {
-    ESP_LOGI(MQTT_TAG, "[APP] Subscribe ok, test publish msg");
-    //const char topic_publish[] = "sensors/"SENSOR_ID"/values";
-    const char topic_publish[] = "sensors/123/values";
-    char body[25];
-    sprintf(body, "{\"Voltage\":%1.2f}", gb_voltage/1000.0);
-    mqtt_client *client = (mqtt_client *)self;
-    mqtt_publish(client, topic_publish, body, strlen(body), 1, 0);                            // sizeof()-1 to compensate for the trailing '\0' in the string
+    
+    //const char topic_subscribe[] = "sensors/"SENSOR_ID"/configuration";
+    //mqtt_subscribe(client, topic_subscribe, 1);
+	ESP_LOGI(MQTT_TAG, "[APP] Subscribe ok, test publish msg");
 }
 
 void publish_cb(void *self, void *params)
 {
-    xEventGroupSetBits(esp32_event_group, MQTT_PUBLISHED_BIT);
+    ESP_LOGI(MQTT_TAG, "[APP] publish_cb");
+}
+
+void publish_sensor_data(void *self, void *params)
+{
+    ESP_LOGI(MQTT_TAG, "[APP] publish_sensor_data ok, test publish msg");
+    const char topic_publish[] = "sensors/"SENSOR_ID"/values";
+    mqtt_client *client = (mqtt_client *)self;
+    mqtt_publish(client, topic_publish, sensor_data, strlen(sensor_data), 1, 0);   
 }
 
 void data_cb(void *self, void *params)
@@ -98,7 +110,7 @@ mqtt_settings settings = {
     //.reconnect_cb = reconnect_cb,
     .subscribe_cb = subscribe_cb,
     .publish_cb = publish_cb,
-    .data_cb = data_cb
+	.data_cb = data_cb
 };
 
 void wifi_conn_init(void)
