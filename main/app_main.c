@@ -3,13 +3,12 @@
 EventGroupHandle_t esp32_event_group = NULL;
 
 const int WIFI_CONNECTED_BIT = BIT0;
+const int MQTT_INITIATE_PUBLISH_BIT = BIT1;
 const int MQTT_CONNECTED_BIT = BIT1;
 const int MQTT_PUBLISHED_BIT = BIT2;
 const int BLE_SCANNED_BIT = BIT3;
 
-char sensor_data[1024];
-
-const char* DEMO_TAG = "IBEACON_DEMO";
+const char* DEMO_TAG = "IBEACON_MAIN";
 
 esp_err_t wifi_event_handler(void *ctx, system_event_t *event)
 {
@@ -76,6 +75,7 @@ void app_main()
     }
 #endif
 
+	esp_wifi_set_auto_connect(true);
     wifi_conn_init();
 
     //GpioInit();
@@ -84,20 +84,32 @@ void app_main()
     * Start thead to manage Beacon Search
     * BleSearch_Task sets BLE_SCANNED_BIT which enables the publish act
     */
-	xTaskCreate(&BleSearch_Task, "BleSearch_Task", 2048, NULL,  8, NULL);
-
+	//xTaskCreate(&BleSearch_Task, "BleSearch_Task", 2048, NULL,  8, NULL);
+	
+	//Start thead to listen GPID
+    //xTaskCreate(&GetAdcValue_Task, "GetAdcValue_Task", 2048, NULL,  8, NULL);
+	xEventGroupWaitBits(esp32_event_group, WIFI_CONNECTED_BIT, true, true, portMAX_DELAY);
+	
     while(1)
     {
         //xEventGroupWaitBits(esp32_event_group, MQTT_INITIATE_PUBLISH_BIT, true, true, portMAX_DELAY);
 		//ESP_LOGI(DEMO_TAG, "Flag MQTT_INITIATE_PUBLISH_BIT - OK");
-        xEventGroupWaitBits(esp32_event_group, WIFI_CONNECTED_BIT, true, true, portMAX_DELAY);
-		xEventGroupWaitBits(esp32_event_group, MQTT_CONNECTED_BIT, true, true, portMAX_DELAY);
-		
+        ESP_LOGI(DEMO_TAG, "Checking.. ");
+		//xEventGroupWaitBits(esp32_event_group, WIFI_CONNECTED_BIT, true, true, portMAX_DELAY);
+		ESP_LOGI(DEMO_TAG, "WiFI is connected ");
+		//xEventGroupWaitBits(esp32_event_group, MQTT_INITIATE_PUBLISH_BIT, true, true, portMAX_DELAY);
+		ESP_LOGI(DEMO_TAG, "Presence identified, Ready to publish  ");
 		xEventGroupWaitBits(esp32_event_group, BLE_SCANNED_BIT, true, true, portMAX_DELAY);
-		xEventGroupWaitBits(esp32_event_group, MQTT_PUBLISHED_BIT, true, true, portMAX_DELAY);
-				
+		ESP_LOGI(DEMO_TAG, "BLE scanned ");
+		//xEventGroupWaitBits(esp32_event_group, MQTT_PUBLISHED_BIT, true, true, portMAX_DELAY);	
+//		ESP_LOGI(DEMO_TAG, "MQTT published ");
 		ESP_LOGI(DEMO_TAG, "Everything is fine. ");
-		//xTaskCreatePinnedToCore(&bt_task, "btTask", 2048, NULL, 5, NULL, 0);
+		
+		//xTaskCreatePinnedToCore(&Bt_taskleSearch_Task, "btTask", 2048, NULL, 5, NULL, 0);
+		
+		if (available_sensor_data()) publish_sensor_data("BLE_CAPTURE_TAG");
+		ESP_LOGI(DEMO_TAG, "MQTT published ");
+		
     }
 }
 

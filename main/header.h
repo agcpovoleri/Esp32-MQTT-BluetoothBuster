@@ -51,7 +51,8 @@
 #define SOFTAP_SSID                 "ESP32AP"
 #define SOFTAP_PASSWORD             "abcdefpassword"
 
-#define WEB_SERVER                  "iot.eclipse.org"
+//#define WEB_SERVER                  "192.168.0.8"
+#define WEB_SERVER                  "192.168.0.14"
 #define WEB_PORT                    1883                                // should be an integer and not a string
 
 #define SENSOR_ID                   "c6f900db58e9"
@@ -67,6 +68,7 @@
 
 extern EventGroupHandle_t esp32_event_group;
 extern const int WIFI_CONNECTED_BIT;
+extern const int MQTT_INITIATE_PUBLISH_BIT;
 extern const int MQTT_CONNECTED_BIT;
 extern const int MQTT_PUBLISHED_BIT;
 extern const int BLE_SCANNED_BIT;

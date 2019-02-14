@@ -68,22 +68,22 @@ void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
                 esp_log_buffer_hex("IBEACON_DEMO: Device address:", scan_result->scan_rst.bda, BD_ADDR_LEN );
                 esp_log_buffer_hex("IBEACON_DEMO: Proximity UUID:", ibeacon_data->ibeacon_vendor.proximity_uuid, ESP_UUID_LEN_128);
 
-                //uint16_t major = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.major);
-                //uint16_t minor = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.minor);
-                //ESP_LOGI(BLE_UTILS_TAG, "Major: 0x%04x (%d)", major, major);
-                //ESP_LOGI(BLE_UTILS_TAG, "Minor: 0x%04x (%d)", minor, minor);
+                uint16_t major = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.major);
+                uint16_t minor = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.minor);
+                ESP_LOGI(BLE_UTILS_TAG, "Major: 0x%04x (%d)", major, major);
+                ESP_LOGI(BLE_UTILS_TAG, "Minor: 0x%04x (%d)", minor, minor);
                 //ESP_LOGI(BLE_UTILS_TAG, "Measured power (RSSI at a 1m distance):%d dbm", ibeacon_data->ibeacon_vendor.measured_power);
                 //ESP_LOGI(BLE_UTILS_TAG, "RSSI of packet:%d dbm", scan_result->scan_rst.rssi);
 
 				//sprintf(sensor_data, "{\"uuid\":\"%s\", \"MAC\":\"%s\" ,\"measured_power\":\"%d\", \"rssi\":\"%d\"}", "test", "any", ibeacon_data->ibeacon_vendor.measured_power, scan_result->scan_rst.rssi);
 				//ESP_LOGI(BLE_UTILS_TAG, "SENSOR_DATA: %s", sensor_data);
 				
-				ESP_LOGI(tag, "Device address (bda): %02x:%02x:%02x:%02x:%02x:%02x", BT_BD_ADDR_HEX(scan_result->scan_rst.bda));
+				ESP_LOGI(BLE_UTILS_TAG, "Device address (bda): %02x:%02x:%02x:%02x:%02x:%02x", BT_BD_ADDR_HEX(scan_result->scan_rst.bda));
 				//ESP_LOGI(tag, "Device type         : %s", bt_dev_type_to_string(scan_result->scan_rst.dev_type));
 				//ESP_LOGI(tag, "Search_evt          : %s", bt_gap_search_event_type_to_string(scan_result->scan_rst.search_evt));
 				//ESP_LOGI(tag, "Addr_type           : %s", bt_addr_t_to_string(scan_result->scan_rst.ble_addr_type));
-				ESP_LOGI(tag, "RSSI                : %d", scan_result->scan_rst.rssi);
-				ESP_LOGI(tag, "Flag                : %d", scan_result->scan_rst.flag);
+				ESP_LOGI(BLE_UTILS_TAG, "RSSI                : %d", scan_result->scan_rst.rssi);
+				ESP_LOGI(BLE_UTILS_TAG, "Flag                : %d", scan_result->scan_rst.flag);
 				  
 				//bit 0 (OFF) LE Limited Discoverable Mode
 				//bit 1 (OFF) LE General Discoverable Mode
@@ -93,12 +93,22 @@ void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 				
 				//Number of tags found
 				//ESP_LOGI(tag, "num_resps           : %d", scan_result->scan_rst.num_resps);
-				
-				sprintf(sensor_data, "{\"uuid\":\"%s\", \"MAC\":\"%02x:%02x:%02x:%02x:%02x:%02x\" ,\"measured_power\":\"%d\", \"rssi\":\"%d\"}", 
+				/*
+				sprintf(sensor_data, "{\"uuid\":\"%s\", \"MAC\":\"%02x:%02x:%02x:%02x:%02x:%02x\",\"major\":\"%d\",\"minor\":\"%d\"}", 
 								SENSOR_ID, 
 								BT_BD_ADDR_HEX(scan_result->scan_rst.bda), 
+								major,
+								minor);	
+				*/
+				
+				sprintf(sensor_data, "{\"uuid\":\"%s\", \"MAC\":\"%02x:%02x:%02x:%02x:%02x:%02x\",\"major\":\"%d\",\"minor\":\"%d\",\"measured_power\":\"%d\", \"rssi\":\"%d\"}", 
+								SENSOR_ID, 
+								BT_BD_ADDR_HEX(scan_result->scan_rst.bda), 
+								major,
+								minor,
 								ibeacon_data->ibeacon_vendor.measured_power, 
 								scan_result->scan_rst.rssi);
+								 
 				ESP_LOGI(BLE_UTILS_TAG, "SENSOR_DATA: %s", sensor_data);			
 				
 				xEventGroupSetBits(esp32_event_group, BLE_SCANNED_BIT);				

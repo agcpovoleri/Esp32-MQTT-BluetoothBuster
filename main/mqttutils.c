@@ -1,7 +1,6 @@
 #include "mqttutils.h"
 
-const char *MQTT_TAG = "MQTT_SAMPLE";
-
+const char *MQTT_TAG = "MQTT_CONN_UTILS";
 mqtt_client * gb_mqttClient = NULL;
 
 void connected_cb(void *self, void *params)
@@ -49,12 +48,18 @@ void publish_cb(void *self, void *params)
     ESP_LOGI(MQTT_TAG, "[APP] publish_cb");
 }
 
-void publish_sensor_data(void *self, void *params)
+bool available_sensor_data()
 {
-    ESP_LOGI(MQTT_TAG, "[APP] publish_sensor_data ok, test publish msg");
+	return NULL != sensor_data;
+}
+
+void publish_sensor_data(void *params)
+{
+	ESP_LOGI(MQTT_TAG, "[APP] publish_sensor_data ok, test publish msg");
     const char topic_publish[] = "sensors/"SENSOR_ID"/values";
-    mqtt_client *client = (mqtt_client *)self;
-    mqtt_publish(client, topic_publish, sensor_data, strlen(sensor_data), 1, 0);   
+    mqtt_client *client = (mqtt_client *) gb_mqttClient;
+    if (client == NULL) ESP_LOGI(MQTT_TAG, "client null");
+	mqtt_publish(client, topic_publish, sensor_data, strlen(sensor_data), 1, 0);   
 }
 
 void data_cb(void *self, void *params)
@@ -129,8 +134,8 @@ void wifi_conn_init(void)
     };
     ESP_ERROR_CHECK(esp_wifi_set_mode(WIFI_MODE_STA));
     ESP_ERROR_CHECK(esp_wifi_set_config(ESP_IF_WIFI_STA, &wifi_config));
-    ESP_LOGI(MQTT_TAG, "start the WIFI SSID:[%s] password:[%s]", CONFIG_WIFI_SSID, "******");
+    ESP_LOGI(MQTT_TAG, "Start the WIFI SSID:[%s] password:[%s]", CONFIG_WIFI_SSID, "******");
     ESP_ERROR_CHECK(esp_wifi_start());
-    ESP_LOGI(MQTT_TAG, "connection created!");
+    ESP_LOGI(MQTT_TAG, "Connection created!");
     
 }

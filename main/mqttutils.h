@@ -12,7 +12,8 @@ void publish_cb(void *self, void *params);
 void data_cb(void *self, void *params);
 void wifi_conn_init(void);
 
-void publish_sensor_data(void *self, void *params);
+bool available_sensor_data();
+void publish_sensor_data(void *params);
 
 extern mqtt_client * gb_mqttClient;
 extern mqtt_settings settings;
