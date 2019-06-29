@@ -33,10 +33,16 @@
 #include "esp_adc_cal.h"
 
 #include "adcutils.h"
+#include "driver/gpio.h"
+#include "sdkconfig.h"
+
 #include "stringutils.h"
+#include "gpio.h"
 #include "mqttutils.h"
 #include "bleutils.h"
 #include "ble_capture.h"
+#include "healthcheck.h"
+
 
 #include "esp_bt.h"
 #include "esp_gap_ble_api.h"
@@ -46,16 +52,20 @@
 #include "esp_ibeacon_api.h"
 
 
-#define WIFI_SSID                   "agcpNet1303"
+#define WIFI_SSID                   "agcpNet2.4G"
 #define WIFI_PASSWORD               "hasTVu$s30s@2"
 #define SOFTAP_SSID                 "ESP32AP"
 #define SOFTAP_PASSWORD             "abcdefpassword"
 
 //#define WEB_SERVER                  "192.168.0.8"
-#define WEB_SERVER                  "192.168.0.14"
+
+//rasp
+#define WEB_SERVER                  "192.168.0.100"
+//iot.eclipse:
+//#define WEB_SERVER                  "198.41.30.241"
 #define WEB_PORT                    1883                                // should be an integer and not a string
 
-#define SENSOR_ID                   "c6f900db58e9"
+#define SENSOR_ID                   "e6f690daf8e9"
 #define SENSOR_KEY                  "2d9a97f168db68ae6f94b1b547581c1f"
 
 #define PIN_LED                     GPIO_NUM_22
@@ -73,8 +83,10 @@ extern const int MQTT_CONNECTED_BIT;
 extern const int MQTT_PUBLISHED_BIT;
 extern const int BLE_SCANNED_BIT;
 
-extern char sensor_data[1024];
+extern char sensor_data[2048];
 
 esp_err_t wifi_event_handler(void *ctx, system_event_t *event);
+
+extern xQueueHandle gpio_evt_queue;
 
 #endif //__HEADER_H__

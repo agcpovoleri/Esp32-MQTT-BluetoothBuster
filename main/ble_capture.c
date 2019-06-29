@@ -1,7 +1,7 @@
 #include "header.h"
 
 const char* BLE_CAPTURE_TAG = "BLECAPTURE_DEMO";
-char sensor_data[1024];
+char sensor_data[2048];
 void BleSearchInit()
 {
     

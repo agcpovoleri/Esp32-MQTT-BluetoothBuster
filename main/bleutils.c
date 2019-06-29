@@ -4,7 +4,8 @@ const char *BLE_UTILS_TAG = "BLE_UTILS";
 
 #define BT_BD_ADDR_STR         "%02x:%02x:%02x:%02x:%02x:%02x"
 #define BT_BD_ADDR_HEX(addr)   addr[0], addr[1], addr[2], addr[3], addr[4], addr[5]
-
+#define BT_UUID_ADDR_HEX(addr)   addr[0], addr[1], addr[2], addr[3], addr[4], addr[5], addr[6], addr[7], addr[8], addr[9], addr[10], addr[11], addr[12], addr[13], addr[14], addr[15]
+#define UUID_LENGTH_IN_BYTE 16
 #define tag "ble1"
 
 #if (IBEACON_MODE == IBEACON_RECEIVER)
@@ -58,31 +59,34 @@ void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
         }
         break;
     case ESP_GAP_BLE_SCAN_RESULT_EVT: {
-        esp_ble_gap_cb_param_t *scan_result = (esp_ble_gap_cb_param_t *)param;
+		
+		esp_ble_gap_cb_param_t *scan_result = (esp_ble_gap_cb_param_t *)param;
         switch (scan_result->scan_rst.search_evt) {
         case ESP_GAP_SEARCH_INQ_RES_EVT:
             /* Search for BLE iBeacon Packet */
             if (esp_ble_is_ibeacon_packet(scan_result->scan_rst.ble_adv, scan_result->scan_rst.adv_data_len)){
                 esp_ble_ibeacon_t *ibeacon_data = (esp_ble_ibeacon_t*)(scan_result->scan_rst.ble_adv);
                 ESP_LOGI(BLE_UTILS_TAG, "----------iBeacon Found----------");
-                esp_log_buffer_hex("IBEACON_DEMO: Device address:", scan_result->scan_rst.bda, BD_ADDR_LEN );
-                esp_log_buffer_hex("IBEACON_DEMO: Proximity UUID:", ibeacon_data->ibeacon_vendor.proximity_uuid, ESP_UUID_LEN_128);
+                //esp_log_buffer_hex("BLE_UTILS: Proximity UUID:", ibeacon_data->ibeacon_vendor.proximity_uuid, ESP_UUID_LEN_128);
+				ESP_LOGI(BLE_UTILS_TAG, "BeaconUID address (uuid): %02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x", BT_UUID_ADDR_HEX(ibeacon_data->ibeacon_vendor.proximity_uuid));
+				//esp_log_buffer_hex("BLE_UTILS: Device address:", scan_result->scan_rst.bda, BD_ADDR_LEN );
+				ESP_LOGI(BLE_UTILS_TAG, "Device address (bda): %02x:%02x:%02x:%02x:%02x:%02x", BT_BD_ADDR_HEX(scan_result->scan_rst.bda));
 
                 uint16_t major = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.major);
                 uint16_t minor = ENDIAN_CHANGE_U16(ibeacon_data->ibeacon_vendor.minor);
                 ESP_LOGI(BLE_UTILS_TAG, "Major: 0x%04x (%d)", major, major);
                 ESP_LOGI(BLE_UTILS_TAG, "Minor: 0x%04x (%d)", minor, minor);
-                //ESP_LOGI(BLE_UTILS_TAG, "Measured power (RSSI at a 1m distance):%d dbm", ibeacon_data->ibeacon_vendor.measured_power);
-                //ESP_LOGI(BLE_UTILS_TAG, "RSSI of packet:%d dbm", scan_result->scan_rst.rssi);
-
 				//sprintf(sensor_data, "{\"uuid\":\"%s\", \"MAC\":\"%s\" ,\"measured_power\":\"%d\", \"rssi\":\"%d\"}", "test", "any", ibeacon_data->ibeacon_vendor.measured_power, scan_result->scan_rst.rssi);
 				//ESP_LOGI(BLE_UTILS_TAG, "SENSOR_DATA: %s", sensor_data);
 				
-				ESP_LOGI(BLE_UTILS_TAG, "Device address (bda): %02x:%02x:%02x:%02x:%02x:%02x", BT_BD_ADDR_HEX(scan_result->scan_rst.bda));
+				
 				//ESP_LOGI(tag, "Device type         : %s", bt_dev_type_to_string(scan_result->scan_rst.dev_type));
 				//ESP_LOGI(tag, "Search_evt          : %s", bt_gap_search_event_type_to_string(scan_result->scan_rst.search_evt));
 				//ESP_LOGI(tag, "Addr_type           : %s", bt_addr_t_to_string(scan_result->scan_rst.ble_addr_type));
+				
+				//ESP_LOGI(BLE_UTILS_TAG, "Measured power (RSSI at a 1m distance):%d dbm", ibeacon_data->ibeacon_vendor.measured_power);
 				ESP_LOGI(BLE_UTILS_TAG, "RSSI                : %d", scan_result->scan_rst.rssi);
+				//ESP_LOGI(BLE_UTILS_TAG, "RSSI of packet:%d dbm", scan_result->scan_rst.rssi);
 				ESP_LOGI(BLE_UTILS_TAG, "Flag                : %d", scan_result->scan_rst.flag);
 				  
 				//bit 0 (OFF) LE Limited Discoverable Mode
@@ -100,9 +104,18 @@ void esp_gap_cb(esp_gap_ble_cb_event_t event, esp_ble_gap_cb_param_t *param)
 								major,
 								minor);	
 				*/
-				
+				/*
 				sprintf(sensor_data, "{\"uuid\":\"%s\", \"MAC\":\"%02x:%02x:%02x:%02x:%02x:%02x\",\"major\":\"%d\",\"minor\":\"%d\",\"measured_power\":\"%d\", \"rssi\":\"%d\"}", 
 								SENSOR_ID, 
+								BT_BD_ADDR_HEX(scan_result->scan_rst.bda), 
+								major,
+								minor,
+								ibeacon_data->ibeacon_vendor.measured_power, 
+								scan_result->scan_rst.rssi);
+				*/
+				sprintf(sensor_data, "{\"sensorUID\":\"%s\",\"beaconUID\":\"%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x%02x\",\"MAC\":\"%02x:%02x:%02x:%02x:%02x:%02x\",\"major\":\"%d\",\"minor\":\"%d\",\"measured_power\":\"%d\", \"rssi\":\"%d\"}", 
+								SENSOR_ID, 
+								BT_UUID_ADDR_HEX(ibeacon_data->ibeacon_vendor.proximity_uuid),
 								BT_BD_ADDR_HEX(scan_result->scan_rst.bda), 
 								major,
 								minor,

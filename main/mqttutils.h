@@ -14,6 +14,8 @@ void wifi_conn_init(void);
 
 bool available_sensor_data();
 void publish_sensor_data(void *params);
+void mqtt_publish_health_check();
+void mqtt_publish_presence_identified();
 
 extern mqtt_client * gb_mqttClient;
 extern mqtt_settings settings;

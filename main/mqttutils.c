@@ -6,9 +6,11 @@ mqtt_client * gb_mqttClient = NULL;
 void connected_cb(void *self, void *params)
 {
     mqtt_client *client = (mqtt_client *)self;
-    const char topic_publish[] = "sensors/"SENSOR_ID"/status";
-    //const char topic_subscribe[] = "sensors/"SENSOR_ID"/configuration";
-    const char body[] = "{\"online\":true}";
+    const char topic_subscribe[] = "/sensors/"SENSOR_ID"/configuration";
+	mqtt_subscribe(client, topic_subscribe, 0);
+  	
+    const char topic_publish[] = "/sensors/status";
+    const char body[] = "{\"sensorUid\":"SENSOR_ID",\"online\":true}";
     ESP_LOGI("connected_cb", "topic_publish: %s   body: %s", topic_publish, body);
     mqtt_publish(client, topic_publish, body, sizeof(body)-1, 1, 0);                            // sizeof()-1 to compensate for the trailing '\0' in the string
 	
@@ -20,8 +22,8 @@ void connected_cb(void *self, void *params)
 void disconnected_cb(void *self, void *params)
 {
 	mqtt_client *client = (mqtt_client *)self;
-    const char topic_publish[] = "sensors/"SENSOR_ID"/status";
-    const char body[] = "{\"online\": false}";
+    const char topic_publish[] = "/sensors/"SENSOR_ID"/status";
+    const char body[] = "{\"sensorUid\":"SENSOR_ID",\"online\":false}";
     mqtt_publish(client, topic_publish, body, sizeof(body)-1, 1, 0);                            // sizeof()-1 to compensate for the trailing '\0' in the string
 	ESP_LOGI("disconnected_cb", "topic_publish: %s   body: %s", topic_publish, body);
 	
@@ -56,11 +58,54 @@ bool available_sensor_data()
 void publish_sensor_data(void *params)
 {
 	ESP_LOGI(MQTT_TAG, "[APP] publish_sensor_data ok, test publish msg");
-    const char topic_publish[] = "sensors/"SENSOR_ID"/values";
+    //const char topic_publish[] = "/sensors/"SENSOR_ID"/values";
+	const char topic_publish[] = "/sensors/beacon";
     mqtt_client *client = (mqtt_client *) gb_mqttClient;
     if (client == NULL) ESP_LOGI(MQTT_TAG, "client null");
 	mqtt_publish(client, topic_publish, sensor_data, strlen(sensor_data), 1, 0);   
 }
+
+void mqtt_publish_health_check()
+{
+    mqtt_client *client = (mqtt_client *) gb_mqttClient;
+    if (client != NULL) {
+		
+		const uint freeRAM = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+		//ESP_LOGI(TAG, "free RAM is %d.", freeRAM);
+		
+		const char topic_publish[] = "/sensors/health";
+		char body[128];
+		sprintf(body, "{\"sensorUID\":\"%s\",\"freeram\":\"%d\",\"battery\":\"%d\"}", 
+								SENSOR_ID,
+								heap_caps_get_free_size(MALLOC_CAP_INTERNAL),
+								100);
+		ESP_LOGI(MQTT_TAG, "[APP] HealthCheck MQTT publishing: %s.", body);
+		mqtt_publish(client, topic_publish, body, strlen(body), 1, 0);                            // sizeof()-1 to compensate for the trailing '\0' in the string
+		
+	} else {
+		ESP_LOGI(MQTT_TAG, "MQTT Client not yet connected. Waiting for connection.");
+	}
+}
+
+void mqtt_publish_presence_identified()
+{
+	mqtt_client *client = (mqtt_client *) gb_mqttClient;
+    if (client != NULL) {
+		
+		const uint freeRAM = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
+		
+		const char topic_publish[] = "/sensors/presence";
+		char body[128];
+		sprintf(body, "{\"sensorUID\":\"%s\"}", SENSOR_ID);
+		
+		ESP_LOGI(MQTT_TAG, "[APP] Presence identified, MQTT publishing: %s.", body);
+    	mqtt_publish(client, topic_publish, body, strlen(body), 1, 0);
+		
+	} else {
+		ESP_LOGI(MQTT_TAG, "MQTT Client not yet connected. Waiting for connection.");
+	}
+}
+
 
 void data_cb(void *self, void *params)
 {
@@ -73,16 +118,18 @@ void data_cb(void *self, void *params)
         topic = malloc(event_data->topic_length + 1);
         memcpy(topic, event_data->topic, event_data->topic_length);
         topic[event_data->topic_length] = 0;
-        ESP_LOGI(MQTT_TAG, "[APP] Publish topic: %s", topic);
+        ESP_LOGI(MQTT_TAG, "[APP] Published topic: %s", topic);
     }
 
     data = malloc(event_data->data_length + 1);
     memcpy(data, event_data->data, event_data->data_length);
     data[event_data->data_length] = 0;
-    ESP_LOGI(MQTT_TAG, "[APP] Publish data[%d/%d bytes]",
+    ESP_LOGI(MQTT_TAG, "[APP] Published data[%d/%d bytes]",
              event_data->data_length + event_data->data_offset,
              event_data->data_total_length);
-    ESP_LOGI(MQTT_TAG, "Publish Data: %s", data);
+    ESP_LOGI(MQTT_TAG, "Published Data: %s", data);
+
+
 
     DecodePublishResponse(topic, data);
 
